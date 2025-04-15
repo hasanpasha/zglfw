@@ -264,20 +264,33 @@ pub const GamepadAxisLeftTrigger: GamepadAxis = 4;
 pub const GamepadAxisRightTrigger: GamepadAxis = 5;
 pub const GamepadAxisLast: GamepadAxis = 5;
 
-pub const GLFWError = error{ NotInitialized, NoCurrentContext, InvalidEnum, InvalidValue, OutOfMemory, APIUnavailable, VersionUnavailable, PlatformError, FormatUnavailable, NoWindowContext, NoError };
+pub const GLFWError = error{
+    NotInitialized,
+    NoCurrentContext,
+    InvalidEnum,
+    InvalidValue,
+    OutOfMemory,
+    APIUnavailable,
+    VersionUnavailable,
+    PlatformError,
+    FormatUnavailable,
+    NoWindowContext,
+};
 
-pub const ErrorCode = c_int;
-pub const NotInitialized: ErrorCode = 0x00010001;
-pub const NoCurrentContext: ErrorCode = 0x00010002;
-pub const InvalidEnum: ErrorCode = 0x00010003;
-pub const InvalidValue: ErrorCode = 0x00010004;
-pub const OutOfMemory: ErrorCode = 0x00010005;
-pub const APIUnavailable: ErrorCode = 0x00010006;
-pub const VersionUnavailable: ErrorCode = 0x00010007;
-pub const PlatformError: ErrorCode = 0x00010008;
-pub const FormatUnavailable: ErrorCode = 0x00010009;
-pub const NoWindowContext: ErrorCode = 0x0001000A;
-pub const NoError: ErrorCode = 0;
+pub const ErrorCode = enum(c_int) {
+    NotInitialized = 0x00010001,
+    NoCurrentContext = 0x00010002,
+    InvalidEnum = 0x00010003,
+    InvalidValue = 0x00010004,
+    OutOfMemory = 0x00010005,
+    APIUnavailable = 0x00010006,
+    VersionUnavailable = 0x00010007,
+    PlatformError = 0x00010008,
+    FormatUnavailable = 0x00010009,
+    NoWindowContext = 0x0001000A,
+    NoError = 0,
+    _,
+};
 
 pub const WindowHint = c_int;
 pub const Focused: WindowHint = 0x00020001;
@@ -534,32 +547,29 @@ pub fn init() !void {
 }
 
 extern fn glfwTerminate() void;
-extern fn glfwGetError(description: ?[*:0]const u8) c_int;
+extern fn glfwGetError(description: ?[*:0]const u8) ErrorCode;
 
 fn errorCheck() !void {
-    const code: c_int = glfwGetError(null);
+    const code = glfwGetError(null);
     const err = switch (code) {
-        NotInitialized => GLFWError.NotInitialized,
-        NoCurrentContext => GLFWError.NoCurrentContext,
-        InvalidEnum => GLFWError.InvalidEnum,
-        InvalidValue => GLFWError.InvalidValue,
-        OutOfMemory => GLFWError.OutOfMemory,
-        APIUnavailable => GLFWError.APIUnavailable,
-        VersionUnavailable => GLFWError.VersionUnavailable,
-        PlatformError => GLFWError.PlatformError,
-        FormatUnavailable => GLFWError.FormatUnavailable,
-        NoWindowContext => GLFWError.NoWindowContext,
-        NoError => GLFWError.NoError,
-        else => GLFWError.NoError,
+        .NotInitialized => GLFWError.NotInitialized,
+        .NoCurrentContext => GLFWError.NoCurrentContext,
+        .InvalidEnum => GLFWError.InvalidEnum,
+        .InvalidValue => GLFWError.InvalidValue,
+        .OutOfMemory => GLFWError.OutOfMemory,
+        .APIUnavailable => GLFWError.APIUnavailable,
+        .VersionUnavailable => GLFWError.VersionUnavailable,
+        .PlatformError => GLFWError.PlatformError,
+        .FormatUnavailable => GLFWError.FormatUnavailable,
+        .NoWindowContext => GLFWError.NoWindowContext,
+        else => return,
     };
     return err;
 }
 
 fn errorCheck2() void {
     errorCheck() catch |err| {
-        if (err != GLFWError.NoError) {
-            std.debug.print("error: {s}\n", .{@errorName(err)});
-        }
+        std.debug.print("error: {s}\n", .{@errorName(err)});
     };
 }
 
